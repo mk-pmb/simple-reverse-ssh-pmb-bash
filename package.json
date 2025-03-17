@@ -1,0 +1,28 @@
+{ "name": "simple-reverse-ssh-2503-pmb",
+  "version": "0.0.0",
+  "description": "A simple reverse OpenSSH implementation, to allow drones to attach themselves to a hive.",
+  "keywords": [],
+
+  "author": "M.K. (https://github.com/mk-pmb)",
+  "homepage": "https://github.com/mk-pmb/simple-reverse-ssh-2503-pmb/#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mk-pmb/simple-reverse-ssh-2503-pmb.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mk-pmb/simple-reverse-ssh-2503-pmb/issues"
+  },
+  "contributors": [],
+
+  "private": true, "license": "ISC",
+
+  "directories": { "test": "test" },
+
+  "dependencies": {
+  },
+  "devDependencies": {
+  },
+
+
+  "engines": { "npm": ">=7.0.0", "bash": ">=5.0.0", "python": ">=3.8.10" }
+}
