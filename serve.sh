@@ -17,6 +17,10 @@ function revssh_cli_init () {
   local SELFNAME="$(basename -- "$SELFFILE" .sh)"
   local SELF_BFN="$(basename -- "$SELFFILE")"
   cd -- "$SELFPATH" || return $?
+
+  # Declare global facts:
+  local TCP_MAX_PORT=65535
+
   revssh_"$TASK" "$@"; return "$?"
 }
 
@@ -109,7 +113,7 @@ function revssh_debug_list_socat_sockets () {
 
 
 function revssh_read_http_request () {
-  local VAL=
+  local VAL= AUX=
   read -rs -t 10 VAL || return 2$(echo E: 'No request was received.' >&2)
   VAL="${VAL%$'\r'}"
   case "$VAL" in
@@ -118,10 +122,13 @@ function revssh_read_http_request () {
   esac
   VAL="${VAL#* }"
   VAL="${VAL% *}"
+
+  AUX="$(revssh_validate_hostname_nofinaldot_colon_port "$VAL")"
+  [ -z "$AUX" ] || return 2$(
+    echo E: "Bad host/port for CONNECT: $AUX" >&2)
+
   REQ_HOST="${VAL%:*}"
   REQ_PORT="${VAL##*:}"
-  [ -n "$REQ_HOST" ] && [ -n "$REQ_PORT" ] && [ -z "${REQ_PORT//[0-9]/}" ] ||
-    return 2$(echo E: "Bad host/port for CONNECT: '$VAL'" >&2)
   echo D: "Valid request for hive $REQ_PORT group '$REQ_HOST'." >&2
   while read -rs -t 10 VAL; do
     VAL="${VAL%$'\r'}"
@@ -129,6 +136,36 @@ function revssh_read_http_request () {
     echo D: "HTTP request header: '$VAL'" >&2
   done
   echo E: 'Incomplete HTTP request.' >&2
+  return 2
+}
+
+
+function revssh_validate_hostname_nofinaldot_colon_port () {
+  local E=
+  [ "${#1}" -lt 160 ] || E='address is too long'
+  # ^-- The real rules for maximum hostname length are a bit complicated
+  #   but for our purposes here we can just pick a sane maximum for the
+  #   entire address, including the port number.
+
+  # The upcoming validations don't actually need to properly match RFCs, as
+  # we map the address to a file path instead of using it for networking.
+  # I was just curious how strict a single `case … in` block could check.
+  [ -n "$E" ] || case "$1" in
+    '' ) E='empty address';;
+    *:*:* ) E='too many ports';;
+    *: ) E='no port number';;
+    :* ) E='no host name';;
+    *:*[^0-9]* ) E='non-digits in port number';;
+    *[^A-Za-z0-9._-]*:* ) E='unsupported characters in hostname';;
+    .* ) E='hostname must not start with a dot';;
+    *..* ) E='hostname contains empty label';;
+    *.:* ) E='expected fewer dots at end of hostname';;
+    -* | *.-* ) E='hostname labels must not start with a hyphen';;
+    *-.* | *-:* ) E='hostname labels must not end with a hyphen';;
+    * ) [ "${1##*:}" -le "$TCP_MAX_PORT" ] || E='port out of range';;
+  esac
+  [ -n "$E" ] || return 0
+  echo "$E"
   return 2
 }
 
