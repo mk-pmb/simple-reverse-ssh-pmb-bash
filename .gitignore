@@ -1,4 +1,9 @@
 
+# Site-specific files:
+/[0-9]*
+/*.@*
+
+
 # Auto-generated files:
 /node_modules
 /tmp.*
