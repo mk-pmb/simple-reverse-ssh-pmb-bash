@@ -56,7 +56,10 @@ function revssh_unset_most_env_vars () {
         echo E: $FUNCNAME: "Flinching: Scary env var name: '$KEY'" >&2
         return 4;;
 
-      TASK | TODO | KEY ) continue;; # keep our internal variables
+      TASK | TODO | KEY | VAL )
+        echo E: $FUNCNAME: >&2 \
+          "Flinching: Env var '$KEY' should have been unset already!"
+        return 4;;
 
       HOME | \
       LOGNAME | \
